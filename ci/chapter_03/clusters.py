@@ -37,6 +37,22 @@ def pearson(vector_1, vector_2):
         return 0
     return 1.0 - num / density
 
+def tanimoto(vector_1, vector_2):
+    """Tanimoto coefficient of two vectors"""
+    c1 = 0
+    c2 = 0
+    shr = 0
+
+    for i in range(len(vector_1)):
+        if vector_1[i] != 0:
+            c1 += 1
+        if vector_2[i] != 0:
+            c2 += 1
+        if vector_1[i] != 0 and vector_2[i] != 0:
+            shr += 1
+
+    return 1.0 - (float(shr) / (c1 + c2 - shr))
+
 def hierarchical_clusters(rows, distance=pearson):
     """Convert a set of data to """
     distances = {}
@@ -242,15 +258,25 @@ if __name__ == '__main__':
     with open('blogdata.txt', 'rb') as fin:
         blog_names, words, data = read_file(fin)
 
-        # cluster = hierarchical_clusters(rows=data)
+    # cluster = hierarchical_clusters(rows=data)
 
-        # # Uncomment to print the tree to console
-        # # BiCluster.print_cluster(cluster, labels=blog_names)
-        # draw_dendrogram(cluster, labels=blog_names, filename='blogs.jpeg')
+    # # Uncomment to print the tree to console
+    # # BiCluster.print_cluster(cluster, labels=blog_names)
+    # draw_dendrogram(cluster, labels=blog_names, filename='blogs.jpeg')
 
-        # rotated_data = rotate_matrix(data)
-        # rotated_clusters = hierarchical_clusters(rows=rotated_data)
-        # draw_dendrogram(rotated_clusters, labels=words, filename='words.jpg')
+    # rotated_data = rotate_matrix(data)
+    # rotated_clusters = hierarchical_clusters(rows=rotated_data)
+    # draw_dendrogram(rotated_clusters, labels=words, filename='words.jpg')
 
-        k_cluster = k_means_clustering(rows=data, k=10)
-        print [blog_names[r] for r in k_cluster[0]]
+    # k_cluster = k_means_clustering(rows=data, k=10)
+    # print [blog_names[r] for r in k_cluster[0]]
+
+    with open('zebo.txt', 'rb') as fin:
+        wants, people, data = read_file(fin)
+
+    print data[0]
+
+    cluster = hierarchical_clusters(data, distance=tanimoto)
+    draw_dendrogram(cluster, wants, filename='zebo.jpg')
+
+
