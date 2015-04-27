@@ -1,6 +1,12 @@
 """A collection of distance algorithms"""
 from math import sqrt
 
+def euclidean(vector_1, vector_2):
+    """Euclidean distances between two vectors"""
+    n = len(vector_1)
+    sum_squares = sum((vector_1[i] - vector_2[i]) ** 2 for i in xrange(n))
+    return 1 / (1 + sqrt(sum_squares))
+
 def pearson(vector_1, vector_2):
     """Pearson correlation for two vectors."""
     sum1 = sum(vector_1)

@@ -3,7 +3,7 @@ import random
 
 from PIL import Image, ImageDraw
 
-from ci.distance import pearson, tanimoto
+from ci.distance import euclidean, pearson, tanimoto
 from ci.bi_tree import BiNode
 
 def read_file(stream):
@@ -165,6 +165,73 @@ def rotate_matrix(data):
         new_data.append(new_row)
     return new_data
 
+def scale_down(data, distance=pearson, rate=0.1):
+    """Apply multidimensional scaling to our data for a 2D projection"""
+    n = len(data)
+
+    real_distances = []
+    for i in xrange(n):
+        tmp_distances = []
+        for j in xrange(n):
+            tmp_distances.append(distance(data[i], data[j]))
+        real_distances.append(tmp_distances)
+
+    # Randomly init the starting points for the 2D locations
+    locations = [[random.random(), random.random()] for _ in xrange(n)]
+    fake_distances = [[0.0 for _ in xrange(n)] for _ in xrange(n)]
+
+    last_error = 0
+    for _ in range(0, 1000):
+        # Find the projected distances
+        for i in xrange(n):
+            for j in xrange(n):
+                fake_distances[i][j] = euclidean(locations[i], locations[j])
+
+        # Move points
+        gradient = [[0.0, 0.0] for _ in xrange(n)]
+
+        total_error = 0
+        for i in range(n):
+            for j in range(n):
+                if j == i:
+                    continue
+                # The error is the percentage difference between the
+                # distances
+                if real_distances[j][i] == 0:
+                    error_term = 1
+                else:
+                    error_term = (fake_distances[i][j] - real_distances[i][j]) / real_distances[i][j]
+
+                # Each point needs to be moved away from or towards the other
+                # point in proportion to how much error there was
+                gradient[i][0] += ((locations[j][0] - locations[i][0]) / fake_distances[i][j]) * error_term
+                gradient[i][1] += ((locations[j][1] - locations[i][1]) / fake_distances[i][j]) * error_term
+
+                # Keep track of the total error
+                total_error += abs(error_term)
+
+        if last_error and last_error < total_error:
+            break
+        last_error = total_error
+
+        # Move each of the points by the learning rate times the gradient
+        for i in range(n):
+            locations[i][0] -= rate * gradient[i][0]
+            locations[i][1] -= rate * gradient[i][1]
+
+    return locations
+
+def draw_2d(data, labels, filename='mds2d.jpg'):
+    """Output a projectin data set to a file"""
+    img = Image.new('RGB',(2000,2000),(255,255,255))
+    draw = ImageDraw.Draw(img)
+    for i in range(len(data)):
+        x = (data[i][0] + 0.5) * 1000
+        y = (data[i][1] + 0.5) * 1000
+        draw.text((x, y), labels[i], (0, 0, 0))
+    img.save(filename, 'JPEG')
+
+
 if __name__ == '__main__':
     with open('blogdata.txt', 'rb') as fin:
         blog_names, words, data = read_file(fin)
@@ -187,3 +254,6 @@ if __name__ == '__main__':
 
     # cluster = hierarchical_clusters(data, distance=tanimoto)
     # draw_dendrogram(cluster, wants, filename='zebo.jpg')
+
+    locations = scale_down(data)
+    draw_2d(data=locations, labels=blog_names, filename='blogs2d.jpg')
