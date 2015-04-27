@@ -4,7 +4,7 @@ from distutils.core import setup, Command
 PACKAGE_NAME = 'ci'
 
 requires = [
-  'feedparser==5.2.0',
+  'feedparser',
   'pillow',
 ]
 
